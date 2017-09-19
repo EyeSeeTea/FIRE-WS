@@ -8,7 +8,7 @@ from base64 import b64encode
 
 from flask import jsonify
 
-import fire
+import fire.api
 
 class TestFireApi(unittest.TestCase):
     Response = collections.namedtuple("Response", ["status", "body"])
@@ -20,8 +20,8 @@ class TestFireApi(unittest.TestCase):
     }
 
     def setUp(self):
-        importlib.reload(fire.models)
-        self.app = fire.app.test_client()
+        importlib.reload(fire.api.models)
+        self.app = fire.api.server.app.test_client()
 
     def request(self, method, path, data=None, user=None):
         app_method = method.lower()
