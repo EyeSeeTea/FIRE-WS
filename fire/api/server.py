@@ -7,7 +7,7 @@ from flask_restful import Resource, Api
 from flask_httpauth import HTTPBasicAuth
 from flask_cors import CORS, cross_origin
 
-import models
+from . import models
 
 # JSON Responses
 
@@ -51,8 +51,6 @@ def admin_or_user(user_id):
 
 app = Flask(__name__)
 CORS(app)
-api = Api(app)
-app.config['ERROR_404_HELP'] = False
 
 @app.errorhandler(404)
 def page_not_found(exception):
@@ -257,7 +255,8 @@ class Pricing(Resource):
         models.pricing.update(new_pricing)
         return success(models.pricing)
 
-# Routes
+api = Api(app)
+app.config['ERROR_404_HELP'] = False
 
 ## User not logged-in
 
@@ -290,6 +289,5 @@ api.add_resource(CallPricing, '/callPricing/<string:number>')
 
 api.add_resource(UserVoucherList, '/users/<int:user_id>/vouchers')
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
+def run(**kwargs):
+    app.run(**kwargs)
