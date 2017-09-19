@@ -288,6 +288,3 @@ api.add_resource(CallPricing, '/callPricing/<string:number>')
 ### Vouchers
 
 api.add_resource(UserVoucherList, '/users/<int:user_id>/vouchers')
-
-def run(**kwargs):
-    app.run(**kwargs)
