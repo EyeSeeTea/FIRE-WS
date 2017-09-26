@@ -1,0 +1,1 @@
+from fire.api.server import app as application

@@ -34,3 +34,46 @@ Implementation of the interfaces defined in the Engine
 
 ## API
 By now, the API is defined in [the MockServer repository](https://github.com/EyeSeeTea/FIRE-MockServer), and will be adapted during the implementation depending on the needs. This API needs to be coordinated with the WiFiCalling implementation.
+
+## Webservice
+
+### Development webservice server
+
+From sources:
+
+```
+$ virtualenv --python /usr/bin/python3.6 .env
+$ .env/bin/pip install -r requirements.txt
+$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -p 5005
+$ curl -u USER:PASSWORD http://localhost:5005/users
+```
+
+### Run tests
+
+```
+$ .env/bin/python -m unittest discover
+```
+
+### Apache install
+
+Add a virtual host to the webservice using a WSGI
+gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A template example:
+
+```
+<VirtualHost *:80>
+  ServerName yourdomain.org
+
+  WSGIPassAuthorization On
+  WSGIDaemonProcess \
+    fire-ws python-home=/path/to/.firews.env \
+    python-path=/path/to/FIRE-WS
+  WSGIProcessGroup fire-ws
+  WSGIScriptAlias / /path/to/FIRE-WS/fire/api/wsgi.py
+
+  <Directory /path/to/FIRE-WS/fire/api>
+    <Files wsgi.py>
+      Require all granted
+    </Files>
+  </Directory>
+</VirtualHost>
+```
