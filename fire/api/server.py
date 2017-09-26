@@ -8,6 +8,7 @@ from flask_httpauth import HTTPBasicAuth
 from flask_cors import CORS, cross_origin
 
 from . import models
+from fire.tools import first, merge
 
 # JSON Responses
 
@@ -70,14 +71,6 @@ def admin_required(arg=None):
     return (wrapper(arg) if callable(arg) else wrapper)
 
 # Helper functions
-
-def first(it):
-    return next(it, None)
-
-def merge(d1, d2):
-    d3 = d1.copy()
-    d3.update(d2)
-    return d3
 
 def get_user(users, user_id):
     if user_id not in models.users:
