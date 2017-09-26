@@ -44,7 +44,7 @@ From sources:
 ```
 $ virtualenv --python /usr/bin/python3.6 .env
 $ .env/bin/pip install -r requirements.txt
-$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -p 5005
+$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -d -p 5005 -c fire-ws.conf
 $ curl -u USER:PASSWORD http://localhost:5005/users
 ```
 
