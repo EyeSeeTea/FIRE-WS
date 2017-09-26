@@ -57,7 +57,7 @@ $ .env/bin/python setup.py test
 ### Apache install
 
 Add a virtual host to the webservice using a WSGI
-gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A template example:
+gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A template example can be found [here](misc/site-apache.conf).
 
 ```
 <VirtualHost *:80>
