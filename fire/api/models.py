@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from fire import config
 from fire.tools import merge
 
 def user(user_id, private_fields=["password"]):
@@ -13,13 +12,12 @@ def index_by_id(objs):
 def get_next_id(resources):
     return (max(resource["id"] for resource in resources.values()) + 1 if resources else 1)
 
-def get_public_user(user, private_fields=["password"]):
-    sip_host = config.get(["sip", "host"])
+def get_public_user(user, sip_host, private_fields=["password"]):
     clean_user = {k: v for (k, v) in user.items() if k not in private_fields}
     return merge(clean_user, {"sip": {"host": sip_host}})
 
 def public_user(user_id):
-    return get_public_user(user(user_id))
+    return get_public_user(user(user_id), "localhost:5060")
 
 users = index_by_id([
     {

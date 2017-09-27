@@ -2,14 +2,18 @@
 from datetime import datetime
 import functools
 
+import flask
 from flask import Flask, jsonify, make_response, request, abort
 from flask_restful import Resource, Api
 from flask_httpauth import HTTPBasicAuth
 from flask_cors import CORS, cross_origin
+from fire import config
 
 from . import models
 from fire.tools import first, merge
 from fire import auth as fire_auth
+
+sip_host = config.get(["sip", "host"])
 
 # JSON Responses
 
@@ -48,6 +52,9 @@ def get_current_user():
 def admin_or_user(user_id):
     current_user = get_current_user()
     return (current_user["admin"] or current_user["id"] == user_id)
+
+def get_public_user(user):
+    return models.get_public_user(user, sip_host)
 
 # Init flask app
 
@@ -103,7 +110,7 @@ class NewUserRequestList(Resource):
             new_id = models.get_next_id(models.new_user_requests)
             new_user_request = {
                 "id": new_id,
-                "user": models.get_public_user(new_user),
+                "user": get_public_user(new_user),
                 "created": datetime.now(),
                 "updated": datetime.now(),
                 "adminUser": None,
@@ -116,12 +123,12 @@ class CurrentUser(Resource):
     @auth.login_required
     def get(self):
         current_user = get_current_user()
-        return success(models.get_public_user(current_user))
+        return success(get_public_user(current_user))
 
 class UserList(Resource):
     @admin_required
     def get(self):
-        return success([models.get_public_user(user) for user in models.users.values()])
+        return success([get_public_user(user) for user in models.users.values()])
 
 class User(Resource):
     @auth.login_required
@@ -129,7 +136,7 @@ class User(Resource):
         if not admin_or_user(user_id):
             return unauthorized()
         user = get_user(models.users, user_id)
-        return success(models.get_public_user(models.users[user_id]))
+        return success(get_public_user(models.users[user_id]))
 
     @admin_required
     def delete(self, user_id):
@@ -233,7 +240,7 @@ class UserVoucherList(Resource):
             activated_voucher = merge(voucher, {
                 "state": "active",
                 "activated": datetime.now(),
-                "user": models.get_public_user(user),
+                "user": get_public_user(user),
             })
             models.vouchers[voucher["id"]] = activated_voucher
             return success(activated_voucher)
