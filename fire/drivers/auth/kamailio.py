@@ -1,13 +1,12 @@
 import subprocess
 
-from fire import config
 from fire.engine.interfaces import AuthInterface
 from fire.tools import first, merge, logger
 
 class AuthKamailio(AuthInterface):
     def get_password(self, username):
         default_get_user_cmd = "kamctl show {username}"
-        cmd = config.get(["kamailio", "get_user"], default_get_user_cmd).format(username=username)
+        cmd = self.config.get(["kamailio", "get_user"], default_get_user_cmd).format(username=username)
         logger.debug("Run: {}".format(cmd))
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if result.returncode:

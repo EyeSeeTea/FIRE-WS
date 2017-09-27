@@ -9,7 +9,7 @@ from flask_cors import CORS, cross_origin
 
 from . import models
 from fire.tools import first, merge
-from fire.engine import auth as fire_auth
+from fire import auth as fire_auth
 
 # JSON Responses
 
