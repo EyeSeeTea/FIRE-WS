@@ -9,6 +9,7 @@ from flask_cors import CORS, cross_origin
 
 from . import models
 from fire.tools import first, merge
+from fire.engine import auth as fire_auth
 
 # JSON Responses
 
@@ -30,7 +31,7 @@ auth = HTTPBasicAuth()
 def get_password(username):
     users_by_username = {user["username"]: user for user in models.users.values()}
     user = users_by_username.get(username)
-    return (user["password"] if user else None)
+    return (fire_auth.get_password(user["phoneNumber"]) if user else None)
 
 @auth.error_handler
 def unauthorized():

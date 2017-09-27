@@ -14,9 +14,9 @@ class TestFireApiServer(unittest.TestCase):
     Response = collections.namedtuple("Response", ["status", "body"])
 
     USERS = {
-        "joel": {"id": 1, "username": "joel", "password": "joel1234"},
-        "maggie": {"id": 2, "username": "maggie", "password": "maggie1234"},
-        "marilyn": {"id": 3, "username": "marilyn", "password": "marilyn1234"},
+        "joel": {"id": 1, "username": "joel", "password": "1pass"},
+        "maggie": {"id": 2, "username": "maggie", "password": "2pass"},
+        "marilyn": {"id": 3, "username": "marilyn", "password": "3pass"},
     }
 
     def setUp(self):
@@ -196,7 +196,6 @@ class TestFireApiServer(unittest.TestCase):
         user = res.body["data"]
         self.assertTrue(user.get("sip"))
         self.assertEqual(user.get("sip").get("host"), "localhost:5060")
-
 
     # Messages
 

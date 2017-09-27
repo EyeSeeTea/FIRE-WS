@@ -1,13 +1,7 @@
-from fire.conf.model import Config
-
-class UninitializedConfig:
-    def __getattr__(self, name):
-        def method(*args, **kwargs):
-            raise RuntimeError("Module not initialized: call fire.init() must be called")
-        return method
-
-config = UninitializedConfig()
+from fire.conf.config import Config, UninitializedConfig
 
 def init(path):
     global config
     config = Config(path)
+
+config = UninitializedConfig()
