@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from fire import config
+from fire.tools import merge
+
 def user(user_id, private_fields=["password"]):
     user = users[user_id]
     return {k: v for (k, v) in user.items() if k not in private_fields}
@@ -11,7 +14,9 @@ def get_next_id(resources):
     return (max(resource["id"] for resource in resources.values()) + 1 if resources else 1)
 
 def get_public_user(user, private_fields=["password"]):
-    return {k: v for (k, v) in user.items() if k not in private_fields}
+    sip_host = config.get_sip_host()
+    clean_user = {k: v for (k, v) in user.items() if k not in private_fields}
+    return merge(clean_user, {"sip": {"host": sip_host}})
 
 def public_user(user_id):
     return get_public_user(user(user_id))
@@ -27,10 +32,9 @@ users = index_by_id([
         "avatarUrl" : "http://24.media.tumblr.com/tumblr_lrt2nf1G7Y1qh4q2fo4_500.png",
         "email": "joel.fleischman@mail.com",
         "state": "active",
-        "phoneNumber": "123-123-001",
+        "phoneNumber": "1",
         "created": datetime(2016, 4, 20),
         "lastAccess": datetime(2016, 4, 24),
-        "serverHost": "http://pbx.com/provision",
         "password": "joel1234",
     },
     {
@@ -43,10 +47,9 @@ users = index_by_id([
         "avatarUrl" : "https://s-media-cache-ak0.pinimg.com/736x/ab/e9/33/abe93316032b2eb1c0f0a28d0761247d.jpg",
         "email": "maggie.oconnell@mail.com",
         "state": "active",
-        "phoneNumber": "123-123-002",
+        "phoneNumber": "2",
         "created": datetime(2016, 5, 10),
         "lastAccess": datetime(2016, 5, 14),
-        "serverHost": "http://pbx.com/provision",
         "password": "maggie1234",
     },
     {
@@ -59,10 +62,9 @@ users = index_by_id([
         "avatarUrl" : "http://www.moosechick.com/Marilyn-totem.JPG",
         "email": "marilyn.whildwind@mail.com",
         "state": "active",
-        "phoneNumber": "123-123-003",
+        "phoneNumber": "3",
         "created": datetime(2014, 1, 2),
         "lastAccess": datetime(2016, 7, 26),
-        "serverHost": "http://pbx.com/provision",
         "password": "marilyn1234",
     },
 ])
@@ -78,9 +80,8 @@ new_user_requests = index_by_id([
             "gender": "male",
             "avatarUrl" : "https://s-media-cache-ak0.pinimg.com/originals/95/0f/80/950f80784424912493374c60c6530a16.jpg",
             "email": "chris.stevens@mail.com",
-            "phoneNumber": "123-123-004",
+            "phoneNumber": "4",
             "created": datetime(2014, 1, 6),
-            "serverHost": "http://pbx.com/provision",
             "password": "chris1234",
         },
         "created": datetime(2014, 1, 2),

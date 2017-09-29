@@ -3,7 +3,7 @@ FIRE WS coordinator. Backend of the WiFiCalling App. Responsible for interacting
 
 ## General Architecture
 The WS architecture is modular and implies a certain number of sub-repositories. It main parts are:
-- The **Engine**. This is the main piece of this repository. It contains all the logic that's needed to accomplish the WiFiCalling needs. The first version of the engine is built directly under this repository, but the intention is to export it to a separate repo in the future, so different engines with different logics could be built and plugged. 
+- The **Engine**. This is the main piece of this repository. It contains all the logic that's needed to accomplish the WiFiCalling needs. The first version of the engine is built directly under this repository, but the intention is to export it to a separate repo in the future, so different engines with different logics could be built and plugged.
 - The **Configuration**. In order to orchestrate all the pieces of software involved in this architecture, an arbitrarily complex configuration file(s) will be needed. The first version of this config file will contain only a few optional things, defining the special use case that funds this project, but the intention is to complete it with more and more variables that could make the project adaptable to many other situations.
 - The **Drivers**. This WS main objective is to coordinate the capabilities of 3 different pieces of software (SIP, auth, billing), but to connect to them, the Engine exposes 3 different interfaces that must be implemented in order to make the Engine work. Talking in Clean Architecture terms, the engine will act as the __domain__, there where all the business logic of the application is happening, while the drivers will act as __repositories__, so as the controllers or external sources of data.
  The **API**. This is the exposed RESTful API to the WiFiCalling App.
@@ -44,20 +44,20 @@ From sources:
 ```
 $ virtualenv --python /usr/bin/python3.6 .env
 $ .env/bin/pip install -r requirements.txt
-$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -p 5005
+$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -d -p 5005 -c fire-ws.conf
 $ curl -u USER:PASSWORD http://localhost:5005/users
 ```
 
 ### Run tests
 
 ```
-$ .env/bin/python -m unittest discover
+$ .env/bin/python setup.py test
 ```
 
 ### Apache install
 
 Add a virtual host to the webservice using a WSGI
-gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A template example:
+gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A template example can be found [here](misc/site-apache.conf).
 
 ```
 <VirtualHost *:80>

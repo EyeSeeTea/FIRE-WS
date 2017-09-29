@@ -1,27 +1,33 @@
-import optparse
+import argparse
 
-from fire.api.server import app
+import fire
 
-def flaskrun(app, default_host="127.0.0.1", default_port="5000"):
-    parser = optparse.OptionParser()
-    parser.add_option("-H", "--host",
-                      help="Hostname of the Flask app [default %s]" % default_host,
-                      default=default_host)
-    parser.add_option("-p", "--port",
-                      help="Port for the Flask app [default %s]" % default_port,
-                      default=default_port)
-    parser.add_option("-d", "--debug",
-                      action="store_true", dest="debug")
-    parser.add_option("-P", "--profile",
-                      action="store_true", dest="profile")
+def flaskrun(default_host="127.0.0.1", default_port="5000"):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-H", "--host",
+        help="Hostname of the Flask app [default %s]" % default_host,
+        default=default_host)
+    parser.add_argument("-p", "--port",
+        help="Port for the Flask app [default %s]" % default_port,
+        default=default_port)
+    parser.add_argument("-d", "--debug",
+        action="store_true", dest="debug")
+    parser.add_argument("-P", "--profile",
+        action="store_true", dest="profile")
+    parser.add_argument("-c", "--config-file",
+        required=True)
 
-    options, args = parser.parse_args()
+    options = parser.parse_args()
 
     if options.profile:
         from werkzeug.contrib.profiler import ProfilerMiddleware
         app.config['PROFILE'] = True
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
         options.debug = True
+
+    # Initialize package (read configuration file) before importing any other modules
+    fire.init(options.config_file)
+    from fire.api.server import app
 
     app.run(
         debug=options.debug,
@@ -30,4 +36,4 @@ def flaskrun(app, default_host="127.0.0.1", default_port="5000"):
     )
 
 if __name__ == '__main__':
-    flaskrun(app)
+    flaskrun()

@@ -10,7 +10,7 @@ from flask import jsonify
 
 import fire.api
 
-class TestFireApi(unittest.TestCase):
+class TestFireApiServer(unittest.TestCase):
     Response = collections.namedtuple("Response", ["status", "body"])
 
     USERS = {
@@ -189,6 +189,14 @@ class TestFireApi(unittest.TestCase):
 
         res = self.request('GET', '/users/2', user=self.USERS["joel"])
         self.assertEqual(res.status, 404)
+
+    def test_get_user_contains_sip_server_info(self):
+        res = self.request("GET", '/users/3', user=self.USERS["marilyn"])
+        self.assertEqual(res.status, 200)
+        user = res.body["data"]
+        self.assertTrue(user.get("sip"))
+        self.assertEqual(user.get("sip").get("host"), "localhost:5060")
+
 
     # Messages
 
