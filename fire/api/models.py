@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from fire import config
 from fire.tools import merge
 
 def user(user_id, private_fields=["password"]):
@@ -13,13 +12,12 @@ def index_by_id(objs):
 def get_next_id(resources):
     return (max(resource["id"] for resource in resources.values()) + 1 if resources else 1)
 
-def get_public_user(user, private_fields=["password"]):
-    sip_host = config.get_sip_host()
+def get_public_user(user, sip_host, private_fields=["password"]):
     clean_user = {k: v for (k, v) in user.items() if k not in private_fields}
     return merge(clean_user, {"sip": {"host": sip_host}})
 
 def public_user(user_id):
-    return get_public_user(user(user_id))
+    return get_public_user(user(user_id), "localhost:5060")
 
 users = index_by_id([
     {
@@ -35,7 +33,7 @@ users = index_by_id([
         "phoneNumber": "1",
         "created": datetime(2016, 4, 20),
         "lastAccess": datetime(2016, 4, 24),
-        "password": "joel1234",
+        "password": "1pass",
     },
     {
         "id": 2,
@@ -50,7 +48,7 @@ users = index_by_id([
         "phoneNumber": "2",
         "created": datetime(2016, 5, 10),
         "lastAccess": datetime(2016, 5, 14),
-        "password": "maggie1234",
+        "password": "2pass",
     },
     {
         "id": 3,
@@ -65,7 +63,7 @@ users = index_by_id([
         "phoneNumber": "3",
         "created": datetime(2014, 1, 2),
         "lastAccess": datetime(2016, 7, 26),
-        "password": "marilyn1234",
+        "password": "3pass",
     },
 ])
 
@@ -82,7 +80,7 @@ new_user_requests = index_by_id([
             "email": "chris.stevens@mail.com",
             "phoneNumber": "4",
             "created": datetime(2014, 1, 6),
-            "password": "chris1234",
+            "password": "4pass",
         },
         "created": datetime(2014, 1, 2),
         "updated": datetime(2014, 1, 2),
