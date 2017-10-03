@@ -94,30 +94,19 @@ class NewUserRequestList(Resource):
         return success(list(models.new_user_requests.values()))
 
     def post(self):
+        # TODO: User validation
         new_user = request.get_json().get("user")
-        username = new_user.get("username")
-        existing_usernames = (user["username"] for user in models.users.values())
-        pending_requested_usernames = (req["user"]["username"]
-            for req in models.new_user_requests.values() if req["state"] == "pending")
-
-        if not username:
-            return error(400, "Missing field: username")
-        if username in existing_usernames:
-            return error(400, "User {} already exist".format(username))
-        elif username in pending_requested_usernames:
-            return error(400, "There is a request for user {} already pending".format(username))
-        else:
-            new_id = models.get_next_id(models.new_user_requests)
-            new_user_request = {
-                "id": new_id,
-                "user": get_public_user(new_user),
-                "created": datetime.now(),
-                "updated": datetime.now(),
-                "adminUser": None,
-                "state": "pending",
-            }
-            models.new_user_requests[new_id] = new_user_request
-            return success(new_user_request)
+        new_id = models.get_next_id(models.new_user_requests)
+        new_user_request = {
+            "id": new_id,
+            "user": new_user,
+            "created": datetime.now(),
+            "updated": datetime.now(),
+            "adminUser": None,
+            "state": "pending",
+        }
+        models.new_user_requests[new_id] = new_user_request
+        return success(new_user_request)
 
 class CurrentUser(Resource):
     @auth.login_required
