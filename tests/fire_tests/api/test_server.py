@@ -44,7 +44,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_existing_resource(self):
         res = self.request("GET", '/users/3', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         self.assertEqual(res.body.get("status"), "success")
         self.assertTrue(res.body.get("data"))
 
@@ -64,7 +64,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_notifications_as_admin(self):
         res = self.request("GET", '/notifications', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         notifications = res.body["data"]
         self.assertEqual(len(notifications), 5)
 
@@ -72,7 +72,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_new_user_requests_as_admin(self):
         res = self.request("GET", '/newUserRequests', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         new_user_requests = res.body["data"]
         self.assertEqual(len(new_user_requests), 2)
 
@@ -87,19 +87,16 @@ class TestFireApiServer(unittest.TestCase):
     def test_post_new_user_requests(self):
         new_user = {
             "name": "Joel Fleischman",
-            "username": "joel2",
             "address": "Flushing, Queens (New York City)",
             "gender": "male",
             "avatarUrl" : "http://24.media.tumblr.com/tumblr_lrt2nf1G7Y1qh4q2fo4_500.png",
             "email": "joel.fleischman@mail.com",
             "state": "active",
-            "phoneNumber": "123-123-001",
             "created": '2017-04-27T16:10:11.894490',
             "lastAccess": '2017-04-27T16:10:11.894490',
-            "serverHost": "http://pbx.com/provision",
         }
         res = self.request("POST", '/newUserRequests', {"user": new_user})
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         new_user_request = res.body["data"]
         self.assertTrue("adminUser" in new_user_request)
         self.assertIsNone(new_user_request.get("adminUser"))
@@ -109,7 +106,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_post_new_user_request_acceptation_activates_user(self):
         res = self.request("POST", '/newUserRequests/1/acceptation', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         new_user_request = res.body["data"]
         self.assertTrue(new_user_request)
         self.assertTrue(new_user_request.get("id"))
@@ -121,7 +118,7 @@ class TestFireApiServer(unittest.TestCase):
         self.assertTrue(accepted_user.get("id"))
 
         res = self.request("GET", '/users/%d' % accepted_user["id"], user=accepted_user)
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
     def test_post_new_user_requests_acceptation_on_already_accepted_request_fails(self):
         res = self.request("POST", '/newUserRequests/2/acceptation', user=self.USERS["joel"])
@@ -129,7 +126,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_post_new_user_requests_rejection_rejects_the_user(self):
         res = self.request("POST", '/newUserRequests/1/rejection', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         new_user_request = res.body["data"]
         self.assertTrue(new_user_request)
         self.assertTrue(new_user_request["id"])
@@ -142,7 +139,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_current_user_succeeds(self):
         res = self.request("GET", '/currentUser', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         users = res.body["data"]
         self.assertEqual(users["username"], "marilyn")
 
@@ -152,7 +149,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_users_as_admin_succeeds(self):
         res = self.request("GET", '/users', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         users = res.body["data"]
         self.assertEqual(len(users), 3)
 
@@ -162,15 +159,15 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_own_user_as_admin_succeeds(self):
         res = self.request("GET", '/users/1', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
     def test_get_other_user_as_admin_succeeds(self):
         res = self.request("GET", '/users/2', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
     def test_get_own_user_as_user_succeeds(self):
         res = self.request("GET", '/users/3', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
     def test_get_other_user_as_user_is_not_authorized(self):
         res = self.request("GET", '/users/1', user=self.USERS["marilyn"])
@@ -179,20 +176,20 @@ class TestFireApiServer(unittest.TestCase):
     def test_patch_user(self):
         data = {"email": "newemail1@mail.com"}
         res = self.request("PATCH", '/users/1', data=data, user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         user = res.body["data"]
         self.assertEqual(user["email"], "newemail1@mail.com")
 
     def test_delete_user(self):
         res = self.request('DELETE', '/users/2', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
         res = self.request('GET', '/users/2', user=self.USERS["joel"])
         self.assertEqual(res.status, 404)
 
     def test_get_user_contains_sip_server_info(self):
         res = self.request("GET", '/users/3', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         user = res.body["data"]
         self.assertTrue(user.get("sip"))
         self.assertEqual(user.get("sip").get("host"), "localhost:5060")
@@ -201,14 +198,14 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_user_messages_as_admin(self):
         res = self.request("GET", '/users/3/messages', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         messages = res.body["data"]
         self.assertEqual(len(messages), 2)
         self.assertTrue(all(message["toUser"]["id"] == 3 for message in messages))
 
     def test_get_user_messages_as_recipient(self):
         res = self.request("GET", '/users/3/messages', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         messages = res.body["data"]
         self.assertEqual(len(messages), 2)
         self.assertTrue(all(message["toUser"]["id"] == 3 for message in messages))
@@ -221,7 +218,7 @@ class TestFireApiServer(unittest.TestCase):
         post_message = {"text": "Hello there!"}
         res = self.request("POST", '/users/3/messages', data=post_message, user=self.USERS["joel"])
         message = res.body["data"]
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         self.assertEqual(message["text"], "Hello there!")
         self.assertEqual(message["fromUser"].get("id"), 1)
         self.assertEqual(message["toUser"].get("id"), 3)
@@ -230,7 +227,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_pricing(self):
         res = self.request("GET", '/pricing', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
 
     def test_patch_pricing(self):
         post_pricing = {
@@ -238,7 +235,7 @@ class TestFireApiServer(unittest.TestCase):
             "localLandLines": 0.85,
         }
         res = self.request("PATCH", '/pricing', data=post_pricing, user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         pricing = res.body["data"]
         self.assertEqual(pricing["localMobile"], 1.55)
         self.assertEqual(pricing["localLandLines"], 0.85)
@@ -249,7 +246,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_call_pricing(self):
         res = self.request("GET", '/callPricing/123-123-123', user=self.USERS["joel"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         pricing = res.body["data"]
         self.assertEqual(pricing["gsm"], 1.5)
         self.assertEqual(pricing["voip"], 0.01)
@@ -258,7 +255,7 @@ class TestFireApiServer(unittest.TestCase):
 
     def test_get_user_vouchers(self):
         res = self.request("GET", '/users/3/vouchers', user=self.USERS["marilyn"])
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         vouchers = res.body["data"]
         self.assertEqual(len(vouchers), 1)
         self.assertTrue(all(message["user"]["id"] == 3 for message in vouchers))
@@ -267,7 +264,7 @@ class TestFireApiServer(unittest.TestCase):
         post_voucher = {"code": "voucher3"}
         res = self.request("POST", '/users/3/vouchers', data=post_voucher, user=self.USERS["marilyn"])
         voucher = res.body["data"]
-        self.assertEqual(res.status, 200)
+        self.assertEqual(res.status, 200, res)
         self.assertEqual(voucher["user"].get("id"), 3)
 
     def test_post_user_voucher_with_code_of_already_active(self):
