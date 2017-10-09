@@ -3,7 +3,7 @@ from configobj import ConfigObj
 class UninitializedConfig:
     def __getattr__(self, name):
         def method(*args, **kwargs):
-            raise RuntimeError("Module not initialized: call fire.init() must be called")
+            raise RuntimeError("Module not initialized: call fire.load_config() must be called")
         return method
 
 class Config:
