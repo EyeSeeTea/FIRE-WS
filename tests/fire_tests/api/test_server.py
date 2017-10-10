@@ -124,9 +124,9 @@ class TestFireApiServer(unittest.TestCase):
         user = res.body["data"]
         self.assertEqual(user["state"], "active")
 
-    def test_post_new_user_requests_acceptation_on_already_accepted_request_fails(self):
+    def test_post_new_user_requests_acceptation_on_already_rejected_request_fails(self):
         res = self.request("POST",
-            '/newUserRequests/{}/acceptation'.format(self.seeds["new_user_requests"]["maggie_accepted"].id),
+            '/newUserRequests/{}/acceptation'.format(self.seeds["new_user_requests"]["maurice_rejected"].id),
             user="joel")
         self.assertEqual(res.status, 400)
 
@@ -142,6 +142,12 @@ class TestFireApiServer(unittest.TestCase):
         self.assertTrue(new_user_request.get("adminUser"))
         self.assertEqual(new_user_request["adminUser"]["id"], self.seeds["users"]["joel"].id)
         self.assertTrue(new_user_request.get("user"))
+
+    def test_post_new_user_requests_rejection_on_already_accepted_request_fails(self):
+        res = self.request("POST",
+            '/newUserRequests/{}/rejection'.format(self.seeds["new_user_requests"]["maggie_accepted"].id),
+            user="joel")
+        self.assertEqual(res.status, 400)
 
     # Users
 

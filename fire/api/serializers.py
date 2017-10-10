@@ -1,4 +1,4 @@
-from marshmallow import fields
+from marshmallow.fields import Nested
 from marshmallow_sqlalchemy import ModelSchema
 
 from fire.api import db, models
@@ -15,31 +15,31 @@ class UserSchema(BaseSchema):
         model = models.User
 
 class NewUserRequestSchema(BaseSchema):
-    user = fields.Nested(UserSchema)
-    admin_user = fields.Nested(UserSchema, dump_to="adminUser")
+    user = Nested(UserSchema)
+    admin_user = Nested(UserSchema, dump_to="adminUser")
 
     class Meta(BaseSchema.Meta):
         model = models.NewUserRequest
 
 class MessageSchema(BaseSchema):
-    from_user = fields.Nested(UserSchema, dump_to="fromUser")
-    to_user = fields.Nested(UserSchema, dump_to="toUser")
+    from_user = Nested(UserSchema, dump_to="fromUser")
+    to_user = Nested(UserSchema, dump_to="toUser")
 
     class Meta(BaseSchema.Meta):
         model = models.Message
 
 class VoucherSchema(BaseSchema):
-    user = fields.Nested(UserSchema)
+    user = Nested(UserSchema)
 
     class Meta(BaseSchema.Meta):
         exclude = ["notifications"]
         model = models.Voucher
 
 class NotificationSchema(BaseSchema):
-    voucher = fields.Nested(VoucherSchema)
-    new_user_request = fields.Nested(NewUserRequestSchema, dump_to="newUserRequest")
-    message = fields.Nested(MessageSchema)
-    user = fields.Nested(UserSchema)
+    new_user_request = Nested(NewUserRequestSchema, dump_to="newUserRequest")
+    message = Nested(MessageSchema)
+    voucher = Nested(VoucherSchema)
+    user = Nested(UserSchema)
 
     class Meta(BaseSchema.Meta):
         model = models.Notification
@@ -52,5 +52,21 @@ schemas = {
     models.Notification: NotificationSchema(),
 }
 
-def get_schema_for_model(model):
-    return schemas[model]
+def load(model, attributes):
+    schema = schemas[model]
+    return schema.load(attributes).data
+
+def dump(obj):
+    schema = schemas[type(obj)]
+    return schema.dump(obj).data
+
+def to_json(obj_or_objs):
+    if isinstance(obj_or_objs, dict):
+        dict_obj = obj_or_objs
+        return dict_obj
+    elif isinstance(obj_or_objs, list):
+        objs = obj_or_objs
+        return [to_json(obj) for obj in objs]
+    else:
+        obj = obj_or_objs
+        return dump(obj)
