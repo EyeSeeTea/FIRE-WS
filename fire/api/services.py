@@ -19,6 +19,9 @@ class CustomSQLAlchemyService(SQLAlchemyService):
 class UserService(CustomSQLAlchemyService):
     __model__ = models.User
 
+    def get_active_user(self, **kwargs):
+        return models.User.query.filter(models.User.state == "active").filter_by(**kwargs).first()
+
     def get_messages(self, user):
         return models.Message.query.filter_by(to_user=user).all()
 
@@ -44,7 +47,6 @@ class NewUserRequestService(CustomSQLAlchemyService):
             return self.save(new_user_request)
         else:
             return None
-
 
     def reject(self, new_user_request, admin_user):
         if new_user_request.state == "rejected":

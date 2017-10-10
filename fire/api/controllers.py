@@ -30,7 +30,7 @@ auth = HTTPBasicAuth()
 
 @auth.get_password
 def get_password(username):
-    user = users.first(username=username)
+    user = users.get_active_user(username=username)
     return (fire_auth.get_password(user.phone_number) if user else None)
 
 @auth.error_handler
@@ -38,7 +38,7 @@ def unauthorized():
     return error(401, "Unauthorized access")
 
 def get_current_user():
-    user = users.first(username=auth.username())
+    user = users.get_active_user(username=auth.username())
     if not user:
         abort_with_error(500, "Cannot get current user")
     else:

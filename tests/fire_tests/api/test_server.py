@@ -157,6 +157,10 @@ class TestFireApiServer(unittest.TestCase):
         users = res.body["data"]
         self.assertEqual(users["username"], "marilyn")
 
+    def test_get_current_user_with_non_active_user_fails(self):
+        res = self.request("GET", '/currentUser', user="chris")
+        self.assertEqual(res.status, 401, res)
+
     def test_get_current_user_without_auth_is_not_authorized(self):
         res = self.request("GET", '/currentUser')
         self.assertEqual(res.status, 401)
