@@ -2,6 +2,9 @@ import logging
 import os
 import subprocess
 
+import inflection
+from marshmallow_sqlalchemy.convert import ModelConverter
+
 def first(it):
     return next(it, None)
 
@@ -29,5 +32,17 @@ def run(cmd, env=None):
         logger.debug("Error, returncode {}:\nstdout={}\nstderr={}".\
             format(result.returncode, result.stdout, result.stderr))
     return result
+
+class CamelModelResourceConverter(ModelConverter):
+    def _add_column_kwargs(self, kwargs, prop):
+        super(CamelModelResourceConverter, self)._add_column_kwargs(kwargs, prop)
+        kwargs["load_from"] = inflection.camelize(prop.key, uppercase_first_letter=False)
+        kwargs["dump_to"] = inflection.camelize(prop.key, uppercase_first_letter=False)
+
+    def _add_relationship_kwargs(self, kwargs, prop):
+        super(CamelModelResourceConverter, self)._add_relationship_kwargs(kwargs, prop)
+        kwargs["load_from"] = inflection.camelize(prop.key, uppercase_first_letter=False)
+        kwargs["dump_to"] = inflection.camelize(prop.key, uppercase_first_letter=False)
+        return
 
 logger = create_logger("fire")

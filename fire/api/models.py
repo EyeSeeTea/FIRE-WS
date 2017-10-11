@@ -1,212 +1,95 @@
 from datetime import datetime
 
-from fire.tools import merge
+from sqlalchemy.orm import relationship
 
-def user(user_id, private_fields=["password"]):
-    user = users[user_id]
-    return {k: v for (k, v) in user.items() if k not in private_fields}
+from savalidation import ValidationMixin
+import savalidation.validators as val
 
-def index_by_id(objs):
-    return {obj["id"]: obj for obj in objs}
+from fire.api import db
 
-def get_next_id(resources):
-    return (max(resource["id"] for resource in resources.values()) + 1 if resources else 1)
+class User(db.Model, ValidationMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    username = db.Column(db.String(80), unique=True)
+    email = db.Column(db.String(120), unique=True)
+    address = db.Column(db.String(255))
+    admin = db.Column(db.Boolean, default=False)
+    gender = db.Column(db.String(80))
+    avatar_url = db.Column(db.String(1024))
+    state = db.Column(db.String(64))
+    phone_number = db.Column(db.String(20))
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    last_access = db.Column(db.DateTime)
+    notifications = relationship("Notification")
 
-def get_public_user(user, sip_host, private_fields=["password"]):
-    clean_user = {k: v for (k, v) in user.items() if k not in private_fields}
-    return merge(clean_user, {"sip": {"host": sip_host}})
+    val.validates_constraints()
+    val.validates_presence_of("name")
+    val.validates_one_of('gender', ["female", "male", "unspecified"])
+    val.validates_one_of('state', ["pending", "active", "inactive"])
 
-def public_user(user_id):
-    return get_public_user(user(user_id), "localhost:5060")
+    def __repr__(self):
+        return '<User(id={id!r} name={name!r}, phone_number={phone_number!r}, state={state!r})>'.\
+            format(id=self.id, name=self.name, phone_number=self.phone_number, state=self.state)
 
-users = index_by_id([
-    {
-        "id": 1,
-        "name": "Joel Fleischman",
-        "username": "joel",
-        "address": "Flushing, Queens (New York City)",
-        "admin": True,
-        "gender": "male",
-        "avatarUrl" : "http://24.media.tumblr.com/tumblr_lrt2nf1G7Y1qh4q2fo4_500.png",
-        "email": "joel.fleischman@mail.com",
-        "state": "active",
-        "phoneNumber": "1",
-        "created": datetime(2016, 4, 20),
-        "lastAccess": datetime(2016, 4, 24),
-        "password": "1pass",
-    },
-    {
-        "id": 2,
-        "name": "Maggie O'Connell",
-        "username": "maggie",
-        "address": "Cicely, Alaska",
-        "admin": True,
-        "gender": "female",
-        "avatarUrl" : "https://s-media-cache-ak0.pinimg.com/736x/ab/e9/33/abe93316032b2eb1c0f0a28d0761247d.jpg",
-        "email": "maggie.oconnell@mail.com",
-        "state": "active",
-        "phoneNumber": "2",
-        "created": datetime(2016, 5, 10),
-        "lastAccess": datetime(2016, 5, 14),
-        "password": "2pass",
-    },
-    {
-        "id": 3,
-        "name": "Marilyn Whirlwind",
-        "username": "marilyn",
-        "address": "Cicely, Alaska",
-        "admin": False,
-        "gender": "female",
-        "avatarUrl" : "http://www.moosechick.com/Marilyn-totem.JPG",
-        "email": "marilyn.whildwind@mail.com",
-        "state": "active",
-        "phoneNumber": "3",
-        "created": datetime(2014, 1, 2),
-        "lastAccess": datetime(2016, 7, 26),
-        "password": "3pass",
-    },
-])
+class NewUserRequest(db.Model, ValidationMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = relationship("User", foreign_keys=[user_id])
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    admin_user = relationship("User", foreign_keys=[admin_user_id])
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    state = db.Column(db.String(64))
 
-new_user_requests = index_by_id([
-    {
-        "id": 1,
-        "user": {
-            "name": "Chris Stevens",
-            "username": "chris",
-            "address": "KBHR 570, Alaska",
-            "admin": False,
-            "gender": "male",
-            "avatarUrl" : "https://s-media-cache-ak0.pinimg.com/originals/95/0f/80/950f80784424912493374c60c6530a16.jpg",
-            "email": "chris.stevens@mail.com",
-            "phoneNumber": "4",
-            "created": datetime(2014, 1, 6),
-            "password": "4pass",
-        },
-        "created": datetime(2014, 1, 2),
-        "updated": datetime(2014, 1, 2),
-        "adminUser": None,
-        "state": "pending",
-    },
-    {
-        "id": 2,
-        "user": public_user(2),
-        "created": datetime(2015, 1, 2),
-        "updated": datetime(2015, 1, 2),
-        "adminUser": user(1),
-        "state": "accepted",
-    },
-])
+    val.validates_constraints()
+    val.validates_one_of('state', ["pending", "accepted", "rejected"])
 
-messages = index_by_id([
-    {
-        "id": 1,
-        "text": "Were you able to call?",
-        "fromUser": public_user(1),
-        "toUser": public_user(3),
-        "created": datetime(2016, 7, 26, 22, 10),
-    },
-    {
-        "id": 2,
-        "text": "Make sure you have credit before making a call",
-        "fromUser": public_user(1),
-        "toUser": public_user(3),
-        "created": datetime(2016, 7, 26, 22, 50),
-    },
-])
+    def __repr__(self):
+        return '<NewUserRequest(id={id!r}, user={user!r}, state={state!r})>'.\
+            format(id=self.id, user=self.user, state=self.state)
 
-vouchers = index_by_id([
-    {
-        "id": 1,
-        "user": public_user(1),
-        "state": "active",
-        "creditRemaining": 40,
-        "creditTotal": 50,
-        "code": "voucher1",
-        "url": "http://vouchers/50",
-        "bulkNumber": "bulk-50",
-        "Vendor": "EstPhonic",
-        "created": datetime(2016, 7, 26, 22, 50),
-        "activated": datetime(2016, 7, 26, 23, 50),
-        "depleted": None,
-    },
-    {
-        "id": 2,
-        "user": public_user(3),
-        "state": "depleted",
-        "creditRemaining": 0,
-        "creditTotal": 80,
-        "code": "voucher2",
-        "url": "http://vouchers/80",
-        "bulkNumber": "bulk-80",
-        "Vendor": "EstPhonic",
-        "created": datetime(2016, 7, 26, 22, 50),
-        "activated": datetime(2016, 7, 26, 23, 50),
-        "depleted": datetime(2016, 7, 29, 20, 50),
-    },
-    {
-        "id": 3,
-        "user": None,
-        "state": "inactive",
-        "creditRemaining": 70,
-        "creditTotal": 70,
-        "code": "voucher3",
-        "url": "http://vouchers/3",
-        "bulkNumber": "bulk-80",
-        "Vendor": "EstPhonic",
-        "created": datetime(2016, 7, 26, 22, 50),
-        "activated": None,
-        "depleted": None,
-    },
-])
+class Message(db.Model, ValidationMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text(), nullable=False)
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    from_user = relationship("User", foreign_keys=[from_user_id])
+    to_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    to_user = relationship("User", foreign_keys=[to_user_id])
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    notifications = relationship("Notification")
 
-notifications = index_by_id([
-    {
-        "id": 1,
-        "type": "newUserAccepted",
-        "newUserRequest": new_user_requests[2],
-    },
-    {
-        "id": 2,
-        "type": "newUserRequest",
-        "newUserRequest": new_user_requests[1],
-    },
-    {
-        "id": 3,
-        "type": "messageSent",
-        "message": messages[1],
-    },
-    {
-        "id": 4,
-        "type": "profileUpdated",
-        "user": public_user(2),
-    },
-    {
-        "id": 5,
-        "type": "toppedUp",
-        "voucher": vouchers[1],
-    },
-])
+    val.validates_constraints()
 
-pricing = {
-    "localMobile": 1.5,
-    "localLandLines": 0.8,
-    "nationalMobile": 2.3,
-    "nationalLandLines": 2.1,
-    "international": [
-        {
-            "country": "Sierra Leone",
-            "mobile": 8.4,
-            "landLines": 5.3,
-        },
-        {
-            "country": "Rwanda",
-            "mobile": 9.2,
-            "landLines": 6.3,
-        },
-    ]
-}
+class Voucher(db.Model, ValidationMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship("User")
+    state = db.Column(db.String(64))
+    code = db.Column(db.String(64))
+    url = db.Column(db.String(1024))
+    bulk_number = db.Column(db.String(128))
+    vendor = db.Column(db.String(128))
+    credit_total = db.Column(db.Integer)
+    credit_remaining = db.Column(db.Integer)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    activated = db.Column(db.DateTime)
+    depleted = db.Column(db.DateTime)
+    notifications = relationship("Notification")
 
-call_pricing = {
-    "gsm": 1.5,
-    "voip": 0.01,
-}
+    val.validates_constraints()
+
+class Notification(db.Model, ValidationMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    type = db.Column(db.String(64))
+    new_user_request_id = db.Column(db.Integer, db.ForeignKey('new_user_request.id'))
+    new_user_request = relationship("NewUserRequest")
+    message_id = db.Column(db.Integer, db.ForeignKey('message.id'))
+    message = relationship("Message", back_populates="notifications")
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship("User", back_populates="notifications")
+    voucher_id = db.Column(db.Integer, db.ForeignKey('voucher.id'))
+    voucher = relationship("Voucher", back_populates="notifications")
+
+    val.validates_constraints()
+    val.validates_one_of('type',
+        ["newUserRequest", "newUserAccepted", "newUserRejected", "messageSent", "profileUpdated", "toppedUp"])

@@ -39,13 +39,26 @@ By now, the API is defined in [the MockServer repository](https://github.com/Eye
 
 ### Development webservice server
 
-From sources:
+Setup from sources:
 
 ```
-$ virtualenv --python /usr/bin/python3.6 .env
+$ virtualenv --python /usr/bin/python3.5 .env
 $ .env/bin/pip install -r requirements.txt
-$ PYTHONPATH=. .env/bin/python bin/fire-dev-server -d -p 5005 -c fire-ws.conf
-$ curl -u USER:PASSWORD http://localhost:5005/users
+$ export CONFIG_FILE=fire-ws.conf FLASK_APP=fire/api/server.py
+$ .env/bin/flask db upgrade
+$ .env/bin/flask seed
+```
+
+Run:
+
+```
+$ .env/bin/flask run -p 5005
+```
+
+Test it:
+
+```
+$ curl -u USER:PASSWORD http://localhost:5005/currentUser
 ```
 
 ### Run tests
@@ -77,3 +90,17 @@ gateway ([docs](http://flask.pocoo.org/docs/0.12/deploying/mod_wsgi/)). A templa
   </Directory>
 </VirtualHost>
 ```
+
+## Development
+
+This packages uses:
+
+* [Flask](http://flask.pocoo.org/): Python micro-web framework.
+* [Flask-RESTful](https://flask-restful.readthedocs.io): REST layer over Flask.
+* [SQLAlchemy](https://www.sqlalchemy.org/): ORM that uses the data mapper pattern.
+* [SAValidation](https://pypi.python.org/pypi/SAValidation): SQLAlchemy model validations.
+* [marshmallow](https://marshmallow.readthedocs.io/en/latest/): Serialization.
+* [Flask-ServiceLayer](https://pypi.python.org/pypi/Flask-ServiceLayer/0.0.4): Service layer to isolate DB from business logic.
+* [Flask-Migrate](https://flask-migrate.readthedocs.io): DB migrations.
+
+
