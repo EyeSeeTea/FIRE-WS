@@ -1,3 +1,12 @@
+"""
+Where the logic really is.
+
+Building blocks to be used in controllers.py.
+"""
+
+# To see why the logic is here, read
+# https://github.com/Sysnove/flask-servicelayer
+
 from datetime import datetime
 
 from fire.api import models, serializers, db
@@ -6,15 +15,18 @@ from flask_servicelayer import SQLAlchemyService
 
 to_json = serializers.to_json
 
+
 class CustomSQLAlchemyService(SQLAlchemyService):
     __db__ = db
 
-    def not_found(self, msg=None):
-        raise ObjectNotFound(msg)
-
-    def get_or_raise(self, id):
+    def __getitem__(self, tid):
         table_name = self.__model__.__table__.name
-        return self.get(id) or self.not_found("{}[id={}]".format(table_name, id))
+        obj = self.get(tid)
+        if obj:
+            return obj
+        else:
+            raise ObjectNotFound("{}[id={}]".format(table_name, tid))
+
 
 class UserService(CustomSQLAlchemyService):
     __model__ = models.User
@@ -27,6 +39,7 @@ class UserService(CustomSQLAlchemyService):
 
     def get_vouchers(self, user):
         return models.Voucher.query.filter_by(user=user).all()
+
 
 class NewUserRequestService(CustomSQLAlchemyService):
     __model__ = models.NewUserRequest
@@ -86,24 +99,31 @@ class NewUserRequestService(CustomSQLAlchemyService):
         else:
             return None
 
+
 class NotificationService(CustomSQLAlchemyService):
     __model__ = models.Notification
 
     def paginated(self):
-        return self.paginate(page=1, per_page=50, order_by=models.Notification.created)
+        return self.paginate(page=1, per_page=50,
+                             order_by=models.Notification.created)
+
 
 class MessageService(CustomSQLAlchemyService):
     __model__ = models.Message
+
 
 class VoucherService(CustomSQLAlchemyService):
     __model__ = models.Voucher
 
     def activate_by_code(self, user, code):
-        voucher = self.first(code=code, state="inactive") \
-            or self.not_found("Voucher with code {}".format(code))
-        return self.update(voucher, state="active", activated=datetime.utcnow(), user=user)
+        voucher = self.first(code=code, state="inactive")
+        if not voucher:
+            raise ObjectNotFound("Voucher with code {}".format(code))
+        return self.update(voucher, state="active",
+                           activated=datetime.utcnow(), user=user)
 
-## Not persisted
+
+# Not persisted
 
 pricing = {
     "local_mobile": 1.5,
