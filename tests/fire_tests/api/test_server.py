@@ -70,6 +70,29 @@ class TestFireApiServer(unittest.TestCase):
         notifications = res.body["data"]
         self.assertEqual(len(notifications), 6)
 
+    def add_dummy_user(self, n):
+        "Helper function for test_notification_limit()."
+        new_user = {
+            "name": "dummy {}".format(n),
+            "address": "Cicely, Alaska",
+            "gender": "female",
+            "email": "dummy{}@mail.com".format(n),
+        }
+        res = self.request("POST", '/newUserRequests', {"user": new_user})
+        url = '/newUserRequests/{}/acceptation'.format(res.body["data"]["id"])
+        self.request("POST", url, user="joel")
+
+    def test_notification_limit(self):
+        expected_limit = 50  # maximum notifications reported
+        # Add more than the expected limit.
+        for i in range(expected_limit + 10):
+            self.add_dummy_user(i)
+        # Get all notifications and see if we only get the expected limit.
+        res = self.request("GET", '/notifications', user="joel")
+        self.assertEqual(res.status, 200, res)
+        notifications = res.body["data"]
+        self.assertEqual(len(notifications), expected_limit)
+
     ### New User Requests
 
     def test_get_new_user_requests_as_admin(self):
