@@ -11,7 +11,7 @@ root_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(root_dir, "../../fire-ws.test.conf")
 os.environ["CONFIG_FILE"] = config_path
 
-from fire.api import server, db, seeds
+from fire.api import server, db, seeds, services
 
 class TestFireApiServer(unittest.TestCase):
     Response = collections.namedtuple("Response", ["status", "body"])
@@ -70,24 +70,13 @@ class TestFireApiServer(unittest.TestCase):
         notifications = res.body["data"]
         self.assertEqual(len(notifications), 6)
 
-    def add_dummy_user(self, n):
-        "Helper function for test_notification_limit()."
-        new_user = {
-            "name": "dummy {}".format(n),
-            "address": "Cicely, Alaska",
-            "gender": "female",
-            "email": "dummy{}@mail.com".format(n),
-        }
-        res = self.request("POST", '/newUserRequests', {"user": new_user})
-        url = '/newUserRequests/{}/acceptation'.format(res.body["data"]["id"])
-        self.request("POST", url, user="joel")
-
     def test_notification_limit(self):
-        expected_limit = 50  # maximum notifications reported
-        # Add more than the expected limit.
-        for i in range(expected_limit + 10):
-            self.add_dummy_user(i)
-        # Get all notifications and see if we only get the expected limit.
+        notifications = services.NotificationService()
+        notification_to_clone = notifications.first()
+        expected_limit = 50
+        for i in range(expected_limit + 1):
+            notifications.clone(notification_to_clone)
+
         res = self.request("GET", '/notifications', user="joel")
         self.assertEqual(res.status, 200, res)
         notifications = res.body["data"]
