@@ -15,4 +15,4 @@ ENV FLASK_APP fire/api/server.py
 RUN .env/bin/flask db upgrade
 RUN .env/bin/flask seed
 EXPOSE 5000
-CMD .env/bin/flask run -h 0.0.0.0
+CMD .env/bin/flask run -h 0.0.0.0 -p 5000
