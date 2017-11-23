@@ -1,24 +1,41 @@
-import json
-from datetime import datetime
-from sqlalchemy import inspect
+"""
+Populate the model with some example data.
+"""
 
-from fire.api import app, models, db
+from datetime import datetime
+from collections import OrderedDict
+
+from fire.api import models, db
+
 
 def create(model_class, unique_attributes, attributes_dict):
-    objects_dict = {key: model_class(**attributes) for (key, attributes) in attributes_dict.items()}
+    """Add to database objects of type model_class filled from attributes_dict.
+
+    It will only add to the database the "new" objects, that is, the ones that
+    don't appear in the database already with the attributes specified in
+    unique_attributes.
+    """
     output = {}
-    for attr, obj in objects_dict.items():
+    for attr, attributes in attributes_dict.items():
+        obj = model_class(**attributes)
         filter = {attr: getattr(obj, attr) for attr in unique_attributes}
         existing_obj = model_class.query.filter_by(**filter).first()
         if not existing_obj:
             db.session.add(obj)
+        # shouldn't we do something like the following?
+        # else:
+        #     raise ValueError('trying to add existing field "%s"' % existing_obj)
         output[attr] = existing_obj or obj
     db.session.commit()
     return output
 
+
 def run():
-    users = create(models.User, ["username"], {
-        "joel": {
+    "Populate the model with some example data."
+    # We use OrderedDict so that the different entries will get assigned a
+    # predictable id (and we can test for it when running the tests).
+    users = create(models.User, ["username"], OrderedDict([
+        ("joel", {
             "name": "Joel Fleischman",
             "username": "joel",
             "address": "Flushing, Queens (New York City)",
@@ -28,8 +45,8 @@ def run():
             "email": "joel.fleischman@mail.com",
             "state": "active",
             "phone_number": "1",
-        },
-        "maggie": {
+        }),
+        ("maggie", {
             "name": "Maggie O'Connell",
             "username": "maggie",
             "address": "Cicely, Alaska",
@@ -39,8 +56,8 @@ def run():
             "email": "maggie.oconnell@mail.com",
             "state": "active",
             "phone_number": "2",
-        },
-        "marilyn": {
+        }),
+        ("marilyn", {
             "name": "Marilyn Whirlwind",
             "username": "marilyn",
             "address": "Cicely, Alaska",
@@ -50,8 +67,8 @@ def run():
             "email": "marilyn.whildwind@mail.com",
             "state": "active",
             "phone_number": "3",
-        },
-        "chris": {
+        }),
+        ("chris", {
             "name": "Chris Stevens",
             "username": "chris",
             "address": "KBHR 570, Alaska",
@@ -60,8 +77,8 @@ def run():
             "avatar_url" : "https://s-media-cache-ak0.pinimg.com/originals/95/0f/80/950f80784424912493374c60c6530a16.jpg",
             "email": "chris.stevens@mail.com",
             "state": "inactive",
-        },
-        "maurice": {
+        }),
+        ("maurice", {
             "name": "Maurice Minnifield",
             "username": "maurice",
             "address": "Some Ranch Somewhere, Alaska",
@@ -70,47 +87,50 @@ def run():
             "avatar_url" : "http://www.barrycorbin.com/maurice/stills/Barry_maurice1.jpg",
             "email": "maurice@mail.com",
             "state": "inactive",
-        },
-    })
+        }),
+    ]))
 
-    new_user_requests = create(models.NewUserRequest, ["user_id", "state"], {
-        "maggie_accepted": {
+    new_user_requests = create(models.NewUserRequest, ["user_id", "state"],
+                               OrderedDict([
+        ("maggie_accepted", {
             "user_id": users["maggie"].id,
             "admin_user_id": users["joel"].id,
             "state": "accepted",
-        },
-        "marilyn_accepted": {
+        }),
+        ("marilyn_accepted", {
             "user_id": users["marilyn"].id,
             "admin_user_id": users["joel"].id,
             "state": "accepted",
-        },
-        "chris_pending": {
+        }),
+        ("chris_pending", {
             "user_id": users["chris"].id,
             "admin_user_id": None,
             "state": "pending",
-        },
-        "maurice_rejected": {
+        }),
+        ("maurice_rejected", {
             "user_id": users["maurice"].id,
             "admin_user_id": users["joel"].id,
             "state": "rejected",
-        },
-    })
+        }),
+    ]))
 
-    messages = create(models.Message, ["from_user_id", "to_user_id", "text"], {
-        "from_maggie_to_marilyn": {
+    messages = create(models.Message, ["from_user_id", "to_user_id", "text"],
+                      OrderedDict([
+        ("from_maggie_to_marilyn", {
             "text": "Were you able to call?",
             "from_user_id": users["maggie"].id,
             "to_user_id": users["marilyn"].id,
-        },
-        "from_joel_to_marilyn": {
+        }),
+        ("from_joel_to_marilyn", {
             "text": "Make sure you have credit before making a call",
             "from_user_id": users["joel"].id,
             "to_user_id": users["marilyn"].id,
-        },
-    })
+        }),
+    ]))
 
-    vouchers = create(models.Voucher, ["user_id", "code"], {
-        "joel_active": {
+    vouchers = create(models.Voucher, ["user_id", "code"],
+                      OrderedDict([
+        ("joel_active", {
             "user_id": users["joel"].id,
             "state": "active",
             "credit_remaining": 40,
@@ -121,8 +141,8 @@ def run():
             "vendor": "EstPhonic",
             "activated": datetime(2016, 7, 26, 23, 50),
             "depleted": None,
-        },
-        "marilyn_depleted": {
+        }),
+        ("marilyn_depleted", {
             "user_id": users["marilyn"].id,
             "state": "depleted",
             "credit_remaining": 0,
@@ -133,8 +153,8 @@ def run():
             "vendor": "EstPhonic",
             "activated": datetime(2016, 7, 26, 23, 50),
             "depleted": datetime(2016, 7, 29, 20, 50),
-        },
-        "unassigned": {
+        }),
+        ("unassigned", {
             "user_id": None,
             "state": "inactive",
             "credit_remaining": 70,
@@ -145,36 +165,37 @@ def run():
             "vendor": "EstPhonic",
             "activated": None,
             "depleted": None,
-        },
-    })
+        }),
+    ]))
 
     notifications = create(models.Notification,
-        ["type", "new_user_request_id", "message_id", "user_id", "voucher_id"], {
-        "new_user_request": {
+        ["type", "new_user_request_id", "message_id", "user_id", "voucher_id"],
+        OrderedDict([
+        ("new_user_request", {
             "type": "newUserRequest",
             "new_user_request_id": new_user_requests["chris_pending"].id,
-        },
-        "new_user_accepted": {
+        }),
+        ("new_user_accepted", {
             "type": "newUserAccepted",
             "new_user_request_id": new_user_requests["marilyn_accepted"].id,
-        },
-        "new_user_rejected": {
+        }),
+        ("new_user_rejected", {
             "type": "newUserRejected",
             "new_user_request_id": new_user_requests["maurice_rejected"].id,
-        },
-        "message_sent": {
+        }),
+        ("message_sent", {
             "type": "messageSent",
             "message_id": messages["from_maggie_to_marilyn"].id,
-        },
-        "profile_updated": {
+        }),
+        ("profile_updated", {
             "type": "profileUpdated",
             "user_id": users["maggie"].id,
-        },
-        "voucher_tooped_up": {
+        }),
+        ("voucher_tooped_up", {
             "type": "toppedUp",
             "voucher_id": vouchers["marilyn_depleted"].id,
-        },
-    })
+        }),
+        ]))
 
     return dict(
         users=users,

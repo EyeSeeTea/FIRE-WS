@@ -270,17 +270,19 @@ class TestFireApiServer(unittest.TestCase):
     # Vouchers
 
     def test_get_user_vouchers(self):
-        res = self.request("GET", '/users/{}/vouchers'.format(self.seeds["users"]["marilyn"].id), user="marilyn")
+        url = '/users/{}/vouchers'.format(self.seeds["users"]["marilyn"].id)
+        res = self.request("GET", url, user="marilyn")
         self.assertEqual(res.status, 200, res)
         vouchers = res.body["data"]
         self.assertEqual(len(vouchers), 1)
-        self.assertTrue(all(voucher["user"]["id"] == 3 for voucher in vouchers))
+        voucher = vouchers[0]
+        self.assertTrue(voucher["user"]["id"] == 3, "bad user id")
 
     def test_post_user_voucher_with_code_of_inactive(self):
         user = self.seeds["users"]["marilyn"]
         post_voucher = {"code": "voucher3"}
         res = self.request("POST", '/users/{}/vouchers'.format(user.id),
-            data=post_voucher, user="marilyn")
+                           data=post_voucher, user="marilyn")
         self.assertEqual(res.status, 200, res)
         voucher = res.body["data"]
         self.assertTrue(voucher["user"])
