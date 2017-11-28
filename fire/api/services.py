@@ -16,6 +16,10 @@ class CustomSQLAlchemyService(SQLAlchemyService):
         table_name = self.__model__.__table__.name
         return self.get(id) or self.not_found("{}[id={}]".format(table_name, id))
 
+    def clone(self, obj):
+        attributes = {k: v for (k, v) in obj.__dict__.items() if not k.startswith("_") and k != "id"}
+        return self.create(**attributes)
+
 class UserService(CustomSQLAlchemyService):
     __model__ = models.User
 

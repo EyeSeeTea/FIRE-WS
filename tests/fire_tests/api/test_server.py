@@ -11,7 +11,7 @@ root_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(root_dir, "../../fire-ws.test.conf")
 os.environ["CONFIG_FILE"] = config_path
 
-from fire.api import server, db, seeds
+from fire.api import server, db, seeds, services
 
 class TestFireApiServer(unittest.TestCase):
     Response = collections.namedtuple("Response", ["status", "body"])
@@ -69,6 +69,18 @@ class TestFireApiServer(unittest.TestCase):
         self.assertEqual(res.status, 200, res)
         notifications = res.body["data"]
         self.assertEqual(len(notifications), 6)
+
+    def test_notification_limit(self):
+        notifications = services.NotificationService()
+        notification_to_clone = notifications.first()
+        expected_limit = 50
+        for i in range(expected_limit + 1):
+            notifications.clone(notification_to_clone)
+
+        res = self.request("GET", '/notifications', user="joel")
+        self.assertEqual(res.status, 200, res)
+        notifications = res.body["data"]
+        self.assertEqual(len(notifications), expected_limit)
 
     ### New User Requests
 
