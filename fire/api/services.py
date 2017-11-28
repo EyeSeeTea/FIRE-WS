@@ -58,6 +58,8 @@ class NewUserRequestService(CustomSQLAlchemyService):
             new_user_request.state = "accepted"
             new_user_request.user.state = "active"
             new_user_request.admin_user = admin_user
+            # Static dial plan based on user id
+            new_user_request.user.phone_number = str(new_user_request.user.id)
             return self.save(new_user_request)
         else:
             return None
