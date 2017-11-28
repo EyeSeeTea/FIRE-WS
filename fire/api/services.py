@@ -45,9 +45,25 @@ class NewUserRequestService(CustomSQLAlchemyService):
         if new_user_request.state == "accepted":
             return new_user_request
         elif new_user_request.state == "pending":
+            # Create notification.
+            user = new_user_request.user
+            message = models.Message(
+                from_user_id=admin_user.id,
+                to_user_id=user.id,
+                text="User {} ({}) accepted".format(user.id, user.username))
+            db.session.add(message)
+            notification = models.Notification(
+                type="newUserAccepted",
+                new_user_request_id=new_user_request.id,
+                message=message)
+            db.session.add(notification)
+            db.session.commit()
+            # Change state.
             new_user_request.state = "accepted"
             new_user_request.user.state = "active"
             new_user_request.admin_user = admin_user
+            # Static dial plan based on user id
+            new_user_request.user.phone_number = str(new_user_request.user.id)
             return self.save(new_user_request)
         else:
             return None
@@ -56,6 +72,20 @@ class NewUserRequestService(CustomSQLAlchemyService):
         if new_user_request.state == "rejected":
             return new_user_request
         elif new_user_request.state == "pending":
+            # Create notification.
+            user = new_user_request.user
+            message = models.Message(
+                from_user_id=admin_user.id,
+                to_user_id=user.id,
+                text="User {} ({}) rejected".format(user.id, user.username))
+            db.session.add(message)
+            notification = models.Notification(
+                type="newUserRejected",
+                new_user_request_id=new_user_request.id,
+                message=message)
+            db.session.add(notification)
+            db.session.commit()
+            # Change state.
             new_user_request.state = "rejected"
             new_user_request.admin_user = admin_user
             return self.save(new_user_request)
